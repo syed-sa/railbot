@@ -1,0 +1,53 @@
+import json
+from typing import Optional
+from redis import Redis
+from app.core.config import get_settings
+
+settings = get_settings()
+
+
+class StateManager:
+    def __init__(self):
+        self.redis = Redis(
+            host=settings.REDIS_HOST,
+            port=settings.REDIS_PORT,
+            db=settings.REDIS_DB,
+            decode_responses=True
+        )
+        self.ttl = 3600  # 1 hour
+
+    def _key(self, conversation_id: str, suffix: str) -> str:
+        return f"chat:{conversation_id}:{suffix}"
+
+    # --------------------------
+    # Conversation Messages
+    # --------------------------
+    def add_message(self, conversation_id: str, role: str, content: str):
+        key = self._key(conversation_id, "messages")
+        entry = json.dumps({"role": role, "content": content})
+        self.redis.rpush(key, entry)
+        self.redis.expire(key, self.ttl)
+
+    def get_messages(self, conversation_id: str):
+        key = self._key(conversation_id, "messages")
+        raw = self.redis.lrange(key, 0, -1)
+        return [json.loads(m) for m in raw]
+
+    # --------------------------
+    # State JSON (intent, params, stage)
+    # --------------------------
+    def set_state(self, conversation_id: str, state_data: dict):
+        key = self._key(conversation_id, "state")
+        self.redis.set(key, json.dumps(state_data))
+        self.redis.expire(key, self.ttl)
+
+    def get_state(self, conversation_id: str) -> Optional[dict]:
+        key = self._key(conversation_id, "state")
+        raw = self.redis.get(key)
+        if not raw:
+            return None
+        return json.loads(raw)
+
+    def clear(self, conversation_id: str):
+        self.redis.delete(self._key(conversation_id, "messages"))
+        self.redis.delete(self._key(conversation_id, "state"))
