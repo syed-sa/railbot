@@ -21,12 +21,15 @@ class Settings(BaseSettings):
     POSTGRES_HOST: str = "localhost"
     POSTGRES_PORT: int = 5432
 
-    # HF API Key
+    # HuggingFace LLM
     HF_API_KEY: str = ""
+    HF_API_URL: str = "https://api-inference.huggingface.co/v1/chat/completions"
+    HF_MODEL_NAME: str = "meta-llama/Meta-Llama-3.2-3B-Instruct"
 
     class Config:
         env_file = ".env"
         extra = "ignore"
+
 
 @lru_cache
 def get_settings():
