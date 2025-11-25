@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     # HuggingFace LLM
     HF_API_KEY: str = ""
     HF_API_URL: str = "https://router.huggingface.co/v1/chat/completions"
-    HF_MODEL_NAME: str = "meta-llama/Meta-Llama-3.2-3B-Instruct"
+    HF_MODEL_NAME: str = "meta-llama/Llama-3.1-8B-Instruct"
 
     class Config:
         env_file = ".env"
