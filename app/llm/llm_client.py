@@ -18,11 +18,8 @@ class LLMClient:
             "max_tokens": 256,
             "temperature": 0.3
         }
-
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json"
-        }
+        headers = {"Authorization": f"Bearer {self.api_key}"}
+    
 
         async with httpx.AsyncClient(timeout=40.0) as client:
             response = await client.post(self.api_url, json=payload, headers=headers)

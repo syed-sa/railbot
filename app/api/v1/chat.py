@@ -14,9 +14,10 @@ class ChatRequest(BaseModel):
 
 
 @router.post("/")
-def chat_endpoint(payload: ChatRequest):
-    reply = chat_service.process_user_message(
-        conversation_id=payload.conversation_id,
-        user_text=payload.message
+async def chat(request: ChatRequest):
+    # Call the async method directly with await
+    reply = await chat_service.process_user_message(
+        request.conversation_id, 
+        request.message
     )
     return {"reply": reply}

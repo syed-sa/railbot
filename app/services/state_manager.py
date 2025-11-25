@@ -6,15 +6,24 @@ from app.core.config import get_settings
 settings = get_settings()
 
 
+# Add connection pooling for better performance
 class StateManager:
     def __init__(self):
         self.redis = Redis(
             host=settings.REDIS_HOST,
             port=settings.REDIS_PORT,
             db=settings.REDIS_DB,
-            decode_responses=True
+            decode_responses=True,
+            max_connections=10  # Add connection pooling
         )
         self.ttl = 3600  # 1 hour
+    
+    def health_check(self) -> bool:
+        """Check if Redis is accessible"""
+        try:
+            return self.redis.ping()
+        except Exception:
+            return False
 
     def _key(self, conversation_id: str, suffix: str) -> str:
         return f"chat:{conversation_id}:{suffix}"
