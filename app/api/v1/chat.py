@@ -1,20 +1,19 @@
 # app/api/chat.py
-
 from fastapi import APIRouter
-from pydantic import BaseModel
+from fastapi.params import Depends
+from app.models.chat import ChatRequest
 from app.services.chat_service import ChatService
 
 router = APIRouter()
-chat_service = ChatService()
+def get_chat_service() -> ChatService:
+    return ChatService()
 
 
-class ChatRequest(BaseModel):
-    conversation_id: str
-    message: str
+
 
 
 @router.post("/")
-async def chat(request: ChatRequest):
+async def chat(request: ChatRequest,chat_service: ChatService = Depends(get_chat_service)):
     # Call the async method directly with await
     reply = await chat_service.process_user_message(
         request.conversation_id, 

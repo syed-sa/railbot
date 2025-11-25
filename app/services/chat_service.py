@@ -1,44 +1,144 @@
+from typing import Dict, Any
 from app.services.state_manager import StateManager
-from app.llm.llm_client import LLMClient
+from app.services.intent_classifier import IntentClassifier
+from app.services.param_extractor import ParamExtractor
+from app.services.irctc_client import IRCTCClient, IRCTCClientError
+
 
 class ChatService:
+
+    HISTORY_LIMIT = 15  # cap message history
+
     def __init__(self):
-        self.state_manager = StateManager()
-        self.llm = LLMClient()
+        self.state = StateManager()
+        self.intent_classifier = IntentClassifier()
+        self.param_extractor = ParamExtractor()
+        self.irctc = IRCTCClient()
 
-    def build_prompt(self, history):
-        """Convert Redis messages to OpenAI/HF format"""
-        return [
-            {"role": msg["role"], "content": msg["content"]}
-            for msg in history
-        ]
+    # -----------------------------------------------------
+    # MAIN ENTRY POINT (ASYNC!)
+    # -----------------------------------------------------
+    async def handle_user_message(self, conversation_id: str, message: str) -> Dict[str, Any]:
+        self._store_message(conversation_id, "user", message)
 
-    async def process_user_message(self, conversation_id: str, user_text: str):
-        """
-        Process user message asynchronously.
-        This should be called from FastAPI endpoints directly.
-        """
-        # Get previous messages
-        history = self.state_manager.get_messages(conversation_id) or []
+        conv_state = self.state.get_state(conversation_id)
 
-        # Add user message to state
-        self.state_manager.add_message(conversation_id, "user", user_text)
+        # -------------------------------------------------
+        # 1. NEW CONVERSATION → classify intent
+        # -------------------------------------------------
+        if not conv_state:
+            intent = self.intent_classifier.classify(message)
+            params = self.param_extractor.extract(intent, message)
 
-        # Build prompt with history + new message
-        prompt = self.build_prompt(history + [{"role": "user", "content": user_text}])
+            missing = self._find_missing(intent, params)
+            stage = "awaiting_params" if missing else "ready"
 
-        # Call LLM
-        reply = await self.llm.generate(prompt)
+            conv_state = {"intent": intent, "params": params, "stage": stage}
+            self.state.set_state(conversation_id, conv_state)
 
-        # Save bot reply
-        self.state_manager.add_message(conversation_id, "assistant", reply)
+            if missing:
+                return {"reply": self._ask_for_missing_params(missing)}
 
-        return reply
-    
-    def clear_conversation(self, conversation_id: str):
-        """Clear all messages and state for a conversation"""
-        self.state_manager.clear(conversation_id)
-    
-    def get_conversation_history(self, conversation_id: str):
-        """Get full conversation history"""
-        return self.state_manager.get_messages(conversation_id) or []
+        # -------------------------------------------------
+        # 2. WAITING FOR PARAMETERS
+        # -------------------------------------------------
+        if conv_state["stage"] == "awaiting_params":
+            new_params = self.param_extractor.extract(conv_state["intent"], message)
+            conv_state["params"].update({k: v for k, v in new_params.items() if v})
+
+            missing = self._find_missing(conv_state["intent"], conv_state["params"])
+
+            if missing:
+                self.state.set_state(conversation_id, conv_state)
+                return {"reply": self._ask_for_missing_params(missing)}
+
+            conv_state["stage"] = "ready"
+            self.state.set_state(conversation_id, conv_state)
+
+        # -------------------------------------------------
+        # 3. ALL PARAMS READY → CALL IRCTC API (ASYNC CALLS)
+        # -------------------------------------------------
+        response_text = await self._dispatch(conv_state["intent"], conv_state["params"])
+
+        self._store_message(conversation_id, "assistant", response_text)
+        self.state.clear(conversation_id)
+
+        return {"reply": response_text}
+
+    # -----------------------------------------------------
+    # 4. REDUCE MESSAGE HISTORY
+    # -----------------------------------------------------
+    def _store_message(self, conversation_id: str, role: str, content: str):
+        self.state.add_message(conversation_id, role, content)
+        messages = self.state.get_messages(conversation_id)
+
+        if len(messages) > self.HISTORY_LIMIT:
+            trimmed = messages[-self.HISTORY_LIMIT:]
+            self.state.redis.delete(self.state._key(conversation_id, "messages"))
+            for m in trimmed:
+                self.state.add_message(conversation_id, m["role"], m["content"])
+
+    # -----------------------------------------------------
+    # 5. DISPATCH TO IRCTC (ASYNC)
+    # -----------------------------------------------------
+    async def _dispatch(self, intent: str, params: Dict[str, Any]) -> str:
+        try:
+            if intent == "live_status":
+                return await self.irctc.get_train_live_status(params["train_no"], params["date"])
+
+            if intent == "between_stations":
+                return await self.irctc.trains_between_stations_v3(
+                    params["source"], params["destination"], params["date"]
+                )
+
+            if intent == "pnr_status":
+                return await self.irctc.get_pnr_status_v3(params["pnr"])
+
+            if intent == "seat_availability":
+                return await self.irctc.check_seat_availability(
+                    params["train_no"],
+                    params["source"],
+                    params["destination"],
+                    params["date"],
+                    params.get("class", "SL")
+                )
+
+            if intent == "train_schedule":
+                return await self.irctc.get_train_schedule(params["train_no"])
+
+            if intent == "live_station":
+                return await self.irctc.get_live_station(params["hours"])
+
+            if intent == "search_train":
+                return await self.irctc.search_train(params["query"])
+
+            if intent == "search_station":
+                return await self.irctc.search_station(params["query"])
+
+            return "❌ Unknown intent."
+
+        except IRCTCClientError as e:
+            return f"⚠️ IRCTC API Error: {e}"
+
+        except Exception as e:
+            return f"⚠️ Error: {e}"
+
+    # -----------------------------------------------------
+    # 6. MISSING PARAM LOGIC
+    # -----------------------------------------------------
+    def _find_missing(self, intent: str, params: Dict[str, Any]):
+        required = {
+            "between_stations": ["source", "destination", "date"],
+            "pnr_status": ["pnr"],
+            "live_status": ["train_no", "date"],
+            "train_schedule": ["train_no"],
+            "seat_availability": ["train_no", "source", "destination", "date"],
+            "live_station": ["hours"],
+            "search_train": ["query"],
+            "search_station": ["query"]
+        }
+        fields = required.get(intent, [])
+        return [f for f in fields if f not in params]
+
+    def _ask_for_missing_params(self, missing):
+        return f"❓ I need the following information: {', '.join(missing)}."
