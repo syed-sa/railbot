@@ -17,7 +17,8 @@ class StateManager:
             max_connections=10  # Add connection pooling
         )
         self.ttl = 3600  # 1 hour
-    
+        self.MAX_HISTORY = 20
+
     def health_check(self) -> bool:
         """Check if Redis is accessible"""
         try:
@@ -34,7 +35,14 @@ class StateManager:
     def add_message(self, conversation_id: str, role: str, content: str):
         key = self._key(conversation_id, "messages")
         entry = json.dumps({"role": role, "content": content})
+
+        # Add message
         self.redis.rpush(key, entry)
+
+        # Limit to last 20 messages
+        self.redis.ltrim(key, -self.MAX_HISTORY, -1)
+
+        # Reset TTL
         self.redis.expire(key, self.ttl)
 
     def get_messages(self, conversation_id: str):
