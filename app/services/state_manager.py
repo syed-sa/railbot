@@ -1,3 +1,4 @@
+"""Manages the state and message history of conversations using Redis."""
 import json
 from typing import Optional
 from redis import Redis
@@ -8,6 +9,7 @@ settings = get_settings()
 
 # Add connection pooling for better performance
 class StateManager:
+    """Manages conversation state and message history using Redis."""
     def __init__(self):
         self.redis = Redis(
             host=settings.REDIS_HOST,
@@ -17,7 +19,7 @@ class StateManager:
             max_connections=10  # Add connection pooling
         )
         self.ttl = 3600  # 1 hour
-        self.MAX_HISTORY = 20
+        self.max_history = 20
 
     def health_check(self) -> bool:
         """Check if Redis is accessible"""
@@ -29,36 +31,35 @@ class StateManager:
     def _key(self, conversation_id: str, suffix: str) -> str:
         return f"chat:{conversation_id}:{suffix}"
 
-    # --------------------------
-    # Conversation Messages
-    # --------------------------
+    
     def add_message(self, conversation_id: str, role: str, content: str):
+        """Add a message to the conversation history."""
         key = self._key(conversation_id, "messages")
         entry = json.dumps({"role": role, "content": content})
 
-        # Add message
         self.redis.rpush(key, entry)
 
         # Limit to last 20 messages
-        self.redis.ltrim(key, -self.MAX_HISTORY, -1)
+        self.redis.ltrim(key, -self.max_history, -1)
 
         # Reset TTL
         self.redis.expire(key, self.ttl)
 
     def get_messages(self, conversation_id: str):
+        """Retrieve the conversation history."""
         key = self._key(conversation_id, "messages")
         raw = self.redis.lrange(key, 0, -1)
         return [json.loads(m) for m in raw]
 
-    # --------------------------
-    # State JSON (intent, params, stage)
-    # --------------------------
+    
     def set_state(self, conversation_id: str, state_data: dict):
+        """Set the conversation state."""
         key = self._key(conversation_id, "state")
         self.redis.set(key, json.dumps(state_data))
         self.redis.expire(key, self.ttl)
 
     def get_state(self, conversation_id: str) -> Optional[dict]:
+        """Retrieve the conversation state."""
         key = self._key(conversation_id, "state")
         raw = self.redis.get(key)
         if not raw:
@@ -66,5 +67,6 @@ class StateManager:
         return json.loads(raw)
 
     def clear(self, conversation_id: str):
+        """Clear the conversation state and message history."""
         self.redis.delete(self._key(conversation_id, "messages"))
         self.redis.delete(self._key(conversation_id, "state"))
