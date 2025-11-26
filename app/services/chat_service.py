@@ -1,31 +1,29 @@
 from typing import Dict, Any
+
+from fastapi.params import Depends
 from app.services.state_manager import StateManager
-from app.services.intent_classifier import IntentClassifier
-from app.services.param_extractor import ParamExtractor
+from app.services.intents.intent_classifier import IntentClassifier
+from app.services.intents.param_extractor import ParamExtractor
 from app.services.irctc_client import IRCTCClient, IRCTCClientError
 
 
 class ChatService:
-
+    """Service to handle chat interactions with users."""
     HISTORY_LIMIT = 15  # cap message history
 
-    def __init__(self):
-        self.state = StateManager()
-        self.intent_classifier = IntentClassifier()
-        self.param_extractor = ParamExtractor()
-        self.irctc = IRCTCClient()
+    def __init__(self,state = Depends (StateManager), intent_classifier: IntentClassifier = Depends(IntentClassifier), param_extractor: ParamExtractor = Depends(ParamExtractor), irctc_client: IRCTCClient = Depends(IRCTCClient)):
+        self.state = state
+        self.intent_classifier = intent_classifier
+        self.param_extractor = param_extractor
+        self.irctc = irctc_client
 
-    # -----------------------------------------------------
-    # MAIN ENTRY POINT (ASYNC!)
-    # -----------------------------------------------------
     async def handle_user_message(self, conversation_id: str, message: str) -> Dict[str, Any]:
+        """Main method to handle user messages."""
         self._store_message(conversation_id, "user", message)
 
         conv_state = self.state.get_state(conversation_id)
 
-        # -------------------------------------------------
-        # 1. NEW CONVERSATION → classify intent
-        # -------------------------------------------------
+        
         if not conv_state:
             intent = self.intent_classifier.classify(message)
             params = self.param_extractor.extract(intent, message)
@@ -39,9 +37,7 @@ class ChatService:
             if missing:
                 return {"reply": self._ask_for_missing_params(missing)}
 
-        # -------------------------------------------------
-        # 2. WAITING FOR PARAMETERS
-        # -------------------------------------------------
+        
         if conv_state["stage"] == "awaiting_params":
             new_params = self.param_extractor.extract(conv_state["intent"], message)
             conv_state["params"].update({k: v for k, v in new_params.items() if v})
@@ -55,9 +51,7 @@ class ChatService:
             conv_state["stage"] = "ready"
             self.state.set_state(conversation_id, conv_state)
 
-        # -------------------------------------------------
-        # 3. ALL PARAMS READY → CALL IRCTC API (ASYNC CALLS)
-        # -------------------------------------------------
+       
         response_text = await self._dispatch(conv_state["intent"], conv_state["params"])
 
         self._store_message(conversation_id, "assistant", response_text)
@@ -65,9 +59,7 @@ class ChatService:
 
         return {"reply": response_text}
 
-    # -----------------------------------------------------
-    # 4. REDUCE MESSAGE HISTORY
-    # -----------------------------------------------------
+   
     def _store_message(self, conversation_id: str, role: str, content: str):
         self.state.add_message(conversation_id, role, content)
         messages = self.state.get_messages(conversation_id)
@@ -78,9 +70,7 @@ class ChatService:
             for m in trimmed:
                 self.state.add_message(conversation_id, m["role"], m["content"])
 
-    # -----------------------------------------------------
-    # 5. DISPATCH TO IRCTC (ASYNC)
-    # -----------------------------------------------------
+   
     async def _dispatch(self, intent: str, params: Dict[str, Any]) -> str:
         try:
             if intent == "live_status":
@@ -123,9 +113,7 @@ class ChatService:
         except Exception as e:
             return f"⚠️ Error: {e}"
 
-    # -----------------------------------------------------
-    # 6. MISSING PARAM LOGIC
-    # -----------------------------------------------------
+    
     def _find_missing(self, intent: str, params: Dict[str, Any]):
         required = {
             "between_stations": ["source", "destination", "date"],
