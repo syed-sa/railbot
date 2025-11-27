@@ -4,14 +4,13 @@ from typing import Optional, Dict
 
 
 class Intent(str, Enum):
-    SEARCH_TRAINS = "search_trains"
+    TRAIN_BETWEEN_STATIONS = "train_between_stations"
     LIVE_STATUS = "live_status"
     TRAIN_SCHEDULE = "train_schedule"
     SEAT_AVAILABILITY = "seat_availability"
     PNR_STATUS = "pnr_status"
     LIVE_STATION = "live_station"
     STATION_SEARCH = "station_search"
-    TRAIN_SEARCH = "train_search"
     UNKNOWN = "unknown"
 
 
