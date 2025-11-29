@@ -3,7 +3,7 @@
 from fastapi import APIRouter
 from fastapi.params import Depends
 from app.models.chat import ChatRequest
-from app.services.chat_service import ChatService
+from app.services.chat.chat_service import ChatService
 
 router = APIRouter()
 
