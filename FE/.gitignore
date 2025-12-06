@@ -1,0 +1,33 @@
+# Node Modules
+/node_modules
+
+# Build & Distribution
+/dist
+/build
+/out
+/coverage
+/public/
+
+# Dependency Lock Files (Keep if you include package.json, which is standard)
+# yarn.lock
+# pnpm-lock.yaml
+# npm-shrinkwrap.json
+
+# Caches & Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.eslintcache
+.stylelintcache
+
+# Environment Files (Local/Secrets)
+.env
+.env.local
+.env.*.local
+
+# Framework-Specific
+.next/        # Next.js
+.svelte-kit/  # SvelteKit
+.cache/       # Gatsby/others
+.parcel-cache # Parcel
