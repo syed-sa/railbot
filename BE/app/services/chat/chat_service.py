@@ -184,7 +184,12 @@ class ChatService:
 
 
     async def stream_reply(self, conversation_id: str, message: str):
-    # All your existing logic remains (intent detection, params, API calls)
-
+        """Stream reply for user message"""
+        print(f"DEBUG [chat_service]: Processing message: '{message}'")
+        
+        # Your existing logic here (intent detection, params, etc.)
+        # ...
+        
+        # Pass string message to LLM service
         async for token in self.llm_service.generate_stream(message):
             yield token

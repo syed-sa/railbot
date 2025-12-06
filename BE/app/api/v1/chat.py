@@ -27,5 +27,6 @@ async def chat_stream(request: ChatRequest, chat_service: ChatService = Depends(
             request.message
         ):
             yield f"data: {token}\n\n"
-
+    
     return StreamingResponse(event_gen(), media_type="text/event-stream")
+    

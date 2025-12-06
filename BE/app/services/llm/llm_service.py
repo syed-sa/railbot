@@ -194,6 +194,15 @@ class LLMService:
         text = llm_response
         return text
 
-    async def generate_stream(self, messages: list):
+    async def generate_stream(self, message: str):
+        print(f"DEBUG [llm_service]: Received message: '{message}'")
+        
+        # Convert string to OpenAI messages format
+        messages = [
+            {"role": "user", "content": message}
+        ]
+        
+        print(f"DEBUG [llm_service]: Sending to LLM client: {messages}")
+        
         async for token in self.llm.generate_stream(messages):
             yield token

@@ -7,6 +7,7 @@ from app.core.config import get_settings
 settings = get_settings()
 
 
+
 class LLMClient:
     def __init__(self):
         self.api_url = settings.HF_API_URL
@@ -32,36 +33,83 @@ class LLMClient:
         return data["choices"][0]["message"]["content"]
     
 
-    async def generate_stream(self, messages: list):
+
+    async def generate_stream(self, messages):
+        """Stream tokens from Hugging Face API"""
+        print(f"DEBUG [llm_client]: generate_stream called with: {messages}")
+        
+        # Ensure messages is in correct format
+        if isinstance(messages, str):
+            messages = [{"role": "user", "content": messages}]
+        elif isinstance(messages, list) and messages and isinstance(messages[0], str):
+            messages = [{"role": "user", "content": messages[0]}]
+        
+        # OpenAI-compatible payload
         payload = {
-            "inputs": messages,
+            "model": settings.HF_MODEL_NAME,
+            "messages": messages,
             "stream": True,
-            "parameters": {
-                "temperature": 0.3,
-                "max_new_tokens": 256
-            }
+            "max_tokens": 256,
+            "temperature": 0.3
         }
 
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Accept": "text/event-stream"
-        }
+        headers = {"Authorization": f"Bearer {self.api_key}"}
+        
+        print(f"DEBUG [llm_client]: Payload: {payload}")
 
-        async with httpx.AsyncClient(timeout=None) as client:
-            async with client.stream("POST", "https://api-inference.huggingface.co/models/meta-llama/Llama-3.1-8B-Instruct", json=payload, headers=headers) as r:
-                async for line in r.aiter_lines():
-                    if line.strip() == "" or not line.startswith("data:"):
-                        continue
-
-                    data = line[len("data: "):]
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            try:
+                async with client.stream("POST", self.api_url, json=payload, headers=headers) as r:
+                    print(f"DEBUG [llm_client]: Response status: {r.status_code}")
                     
-                    if data == "[DONE]":
-                        break
-
-                    try:
-                        chunk = json.loads(data)
-                        token = chunk.get("token", {}).get("text", "")
-                        if token:
-                            yield token
-                    except:
-                        continue
+                    if r.status_code != 200:
+                        # Read error response
+                        error_data = await r.aread()
+                        error_text = error_data.decode('utf-8', errors='ignore')
+                        print(f"DEBUG [llm_client]: API error: {error_text}")
+                        yield f"Error {r.status_code}: {error_text[:100]}"
+                        return
+                    
+                    async for line in r.aiter_lines():
+                        line = line.strip()
+                        if not line:
+                            continue
+                        
+                        print(f"DEBUG [llm_client]: Raw line: {repr(line)}")
+                        
+                        if line.startswith("data: "):
+                            data = line[6:]  # Remove "data: "
+                            
+                            if data == "[DONE]":
+                                print("DEBUG [llm_client]: Stream complete")
+                                break
+                            
+                            try:
+                                chunk = json.loads(data)
+                                print(f"DEBUG [llm_client]: Parsed chunk: {chunk}")
+                                
+                                # OpenAI stream format
+                                if "choices" in chunk and chunk["choices"]:
+                                    delta = chunk["choices"][0].get("delta", {})
+                                    token = delta.get("content", "")
+                                    if token:
+                                        yield token
+                                # Alternative format
+                                elif "content" in chunk:
+                                    yield chunk["content"]
+                                elif "text" in chunk:
+                                    yield chunk["text"]
+                                elif "token" in chunk and "text" in chunk["token"]:
+                                    yield chunk["token"]["text"]
+                                else:
+                                    print(f"DEBUG [llm_client]: Unexpected format: {chunk}")
+                                    
+                            except json.JSONDecodeError as e:
+                                print(f"DEBUG [llm_client]: JSON error: {e}, data: {data}")
+                                # If not JSON, try as plain text
+                                if data and data != "[DONE]":
+                                    yield data
+                    
+            except Exception as e:
+                print(f"DEBUG [llm_client]: Exception: {e}")
+                yield f"Connection error: {str(e)}"
