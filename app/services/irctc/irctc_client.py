@@ -64,20 +64,20 @@ class IRCTCClient:
             "dateOfJourney": date_of_journey
         })
 
-    async def get_train_live_status(self, train_no: str, start_day: str) -> Dict[str, Any]:
+    async def get_train_live_status(self, train_no: str) -> Dict[str, Any]:
         
-        """GET /api/v1/Get Train Live Status"""
-        return await self._get("/api/v1/GetTrainLiveStatus", params={"trainNo": train_no, "startDay": start_day})
+        """GET /api/v1/liveTrainStatus"""
+        return await self._get("/api/v1/liveTrainStatus", params={"trainNo": train_no})
 
     async def get_train_schedule(self, train_no: str) -> Dict[str, Any]:
         
-        """GET /api/v1/Get Train Schedule"""
-        return await self._get("/api/v1/GetTrainSchedule", params={"trainNo": train_no})
+        """GET /api/v1/getTrainSchedule"""
+        return await self._get("/api/v1/getTrainSchedule", params={"trainNo": train_no})
 
     async def get_pnr_status_v3(self, pnr: str) -> Dict[str, Any]:
         
-        """GET /api/v3/GetPNRStatus"""
-        return await self._get("/api/v3/GetPNRStatus", params={"pnr": pnr})
+        """GET /api/v3/getPNRStatus"""
+        return await self._get("/api/v3/getPNRStatus", params={"pnrNumber": pnr})
 
 
     async def check_seat_availability_v2(self, train_no: str, from_station_code: str, to_station_code: str, date_of_journey: str, class_type: str, quota: str) -> Dict[str, Any]:
@@ -95,29 +95,21 @@ class IRCTCClient:
 
     async def get_train_classes(self) -> Dict[str, Any]:
         
-        """GET /api/v1/GetTrainClasses"""
-        return await self._get("/api/v1/GetTrainClasses")
+        """GET /api/v1/getTrainClasses"""
+        return await self._get("/api/v1/getTrainClasses")
 
-    async def get_fare(self, train_no: str, from_station_code: str, to_station_code: str, age: Optional[int] = None, travel_class: Optional[str] = None) -> Dict[str, Any]:
+    async def get_fare(self, train_no: str, from_station_code: str, to_station_code: str) -> Dict[str, Any]:
         
-        """GET /api/v1/GetFare"""
+        """GET /api/v1/getFare"""
         params = {
             "trainNo": train_no,
             "fromStationCode": from_station_code,
             "toStationCode": to_station_code,
         }
-        if age is not None:
-            params["age"] = age
-        if travel_class:
-            params["class"] = travel_class
-        return await self._get("/api/v1/GetFare", params=params)
+        return await self._get("/api/v1/getFare", params=params)
 
     async def get_trains_by_station(self, station_code: str) -> Dict[str, Any]:
         
-        """GET /api/v1/GetTrainsByStation"""
-        return await self._get("/api/v1/GetTrainsByStation", params={"stationCode": station_code})
+        """GET /api/v1/getTrainsByStation"""
+        return await self._get("/api/v1/getTrainsByStation", params={"stationCode": station_code})
 
-    async def get_live_station(self, hours: int = 1) -> Dict[str, Any]:
-        
-        """GET /api/v3/getLiveStation?hours=1"""
-        return await self._get("/api/v3/getLiveStation", params={"hours": hours})

@@ -131,12 +131,13 @@ class ChatService:
                 )
             if intent == "train_schedule":
                 return await self.irctc.get_train_schedule(params["train_no"])
-            if intent == "live_station":
-                return await self.irctc.get_live_station(params["hours"])
             if intent == "search_train":
                 return await self.irctc.search_train(params["query"])
             if intent == "search_station":
                 return await self.irctc.search_station(params["query"])
+            if intent == "get_fare":
+                return await self.irctc.get_fare(
+                    params["trainNo"], params["source"], params["destination"])
 
             return "Unknown intent. Please rephrase."
         except IRCTCClientError as e:
@@ -151,9 +152,9 @@ class ChatService:
             "live_status": ["train_no", "date"],
             "train_schedule": ["train_no"],
             "seat_availability": ["train_no", "source", "destination", "date", "class_type", "quota"],
-            "live_station": ["hours"],
             "search_train": ["query"],
-            "search_station": ["query"]
+            "search_station": ["query"],
+            "get_fare": ["trainNo", "source", "destination"]
         }
         missing = []
         for f in required.get(intent, []):

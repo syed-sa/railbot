@@ -41,9 +41,9 @@ class LLMService:
             - train_schedule
             - seat_availability
             - pnr_status
-            - live_station
             - search_train
             - search_station
+            - get_fare
 
             ====================
             OUT OF SCOPE:
@@ -146,8 +146,7 @@ class LLMService:
                 },
                 "pnr_status": {"pnr": "10-digit PNR number"},
                 "live_status": {
-                    "train_no": "Train number",
-                    "date": "Date to check (YYYY-MM-DD)",
+                    "trainNo": "Train number",
                 },
                 "train_schedule": {"train_no": "Train number"},
                 "seat_availability": {
@@ -158,10 +157,13 @@ class LLMService:
                 "class_type": "Class code (e.g., 2A, SL, 3A)",
                 "quota": "Booking quota (e.g., GN)"
                 },
-                "live_station": {"hours": "Number of hours to look ahead"},
                 "search_train": {"query": "Train name or number to search"},
                 "search_station": {"query": "Station name to search"},
-        }
+                "get_fare": { "trainNo": "Train number",
+                              "source": "Source station code",
+                              "destination": "Destination station code",
+                }
+                }
         return schemas.get(intent, {})
 
 
