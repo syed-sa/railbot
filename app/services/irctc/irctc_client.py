@@ -79,23 +79,19 @@ class IRCTCClient:
         """GET /api/v3/GetPNRStatus"""
         return await self._get("/api/v3/GetPNRStatus", params={"pnr": pnr})
 
-    async def check_seat_availability(self, train_no: str, from_station_code: str, to_station_code: str, date_of_journey: str, travel_class: Optional[str] = None) -> Dict[str, Any]:
+
+    async def check_seat_availability_v2(self, train_no: str, from_station_code: str, to_station_code: str, date_of_journey: str, class_type: str, quota: str) -> Dict[str, Any]:
         
-        """GET /api/v1/CheckSeatAvailability (or v2 variant)"""
+        """GET /api/v2/CheckSeatAvailability - pass whatever the v2 expects in kwargs"""
         params = {
             "trainNo": train_no,
             "fromStationCode": from_station_code,
             "toStationCode": to_station_code,
-            "dateOfJourney": date_of_journey
+            "date": date_of_journey,
+            "classType": class_type,
+            "quota": quota
         }
-        if travel_class:
-            params["class"] = travel_class
-        return await self._get("/api/v1/CheckSeatAvailability", params=params)
-
-    async def check_seat_availability_v2(self, **kwargs) -> Dict[str, Any]:
-        
-        """GET /api/v2/CheckSeatAvailability - pass whatever the v2 expects in kwargs"""
-        return await self._get("/api/v2/CheckSeatAvailability", params=kwargs)
+        return await self._get("/api/v2/checkSeatAvailability", params=params)
 
     async def get_train_classes(self) -> Dict[str, Any]:
         

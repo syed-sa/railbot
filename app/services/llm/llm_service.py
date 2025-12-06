@@ -102,9 +102,9 @@ class LLMService:
         - Station names should be   station codes (e.g., "NDLS" for New Delhi")
         - Dates may appear in formats such as:
         * DD/MM/YYYY
-        * DD-MM-YYYY
+        * YYYY-MM-DD
         * DD/MM/YY
-        * DD-MM-YY
+        * YY-MM-DD
         - Always convert extracted dates to YYYY-MM-DD format.
         - If year is 2 digits (e.g., 25), interpret it as 20YY → 2025.
         - Train numbers without spaces
@@ -151,11 +151,12 @@ class LLMService:
                 },
                 "train_schedule": {"train_no": "Train number"},
                 "seat_availability": {
-                    "train_no": "Train number",
-                    "source": "Source station code",
-                    "destination": "Destination station code",
-                    "date": "Journey date (YYYY-MM-DD)",
-                    "class": "Class code (optional, default: SL)",
+                "train_no": "Train number (e.g., 19038)",
+                "source": "Source station code (e.g., ST)",
+                "destination": "Destination station code (e.g., BVI)",
+                "date": "Journey date (YYYY-MM-DD)",
+                "class_type": "Class code (e.g., 2A, SL, 3A)",
+                "quota": "Booking quota (e.g., GN)"
                 },
                 "live_station": {"hours": "Number of hours to look ahead"},
                 "search_train": {"query": "Train name or number to search"},

@@ -126,8 +126,8 @@ class ChatService:
             if intent == "pnr_status":
                 return await self.irctc.get_pnr_status_v3(params["pnr"])
             if intent == "seat_availability":
-                return await self.irctc.check_seat_availability(
-                    params["train_no"], params["source"], params["destination"], params["date"], params.get("class", "SL")
+                return await self.irctc.check_seat_availability_v2(
+                    params["train_no"], params["source"], params["destination"], params["date"], params["class_type"], params["quota"]
                 )
             if intent == "train_schedule":
                 return await self.irctc.get_train_schedule(params["train_no"])
@@ -150,7 +150,7 @@ class ChatService:
             "pnr_status": ["pnr"],
             "live_status": ["train_no", "date"],
             "train_schedule": ["train_no"],
-            "seat_availability": ["train_no", "source", "destination", "date"],
+            "seat_availability": ["train_no", "source", "destination", "date", "class_type", "quota"],
             "live_station": ["hours"],
             "search_train": ["query"],
             "search_station": ["query"]
@@ -171,7 +171,8 @@ class ChatService:
             "pnr": "PNR number",
             "hours": "number of hours",
             "query": "search keyword",
-            "class": "class type"
+            "class_type": "class type",
+            "qouta" : "qouta"
         }
         readable = [names.get(f, f) for f in missing]
         if len(readable) == 1:
