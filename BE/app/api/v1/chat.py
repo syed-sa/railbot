@@ -2,6 +2,7 @@
 """
 from fastapi import APIRouter
 from fastapi.params import Depends
+from fastapi.responses import StreamingResponse
 from app.models.chat import ChatRequest
 from app.services.chat.chat_service import ChatService
 
@@ -16,3 +17,15 @@ async def chat(request: ChatRequest,chat_service: ChatService = Depends(ChatServ
         request.message
     )
     return {"reply": reply}
+
+@router.post("/stream")
+async def chat_stream(request: ChatRequest, chat_service: ChatService = Depends(ChatService)):
+
+    async def event_gen():
+        async for token in chat_service.stream_reply(
+            request.conversation_id,
+            request.message
+        ):
+            yield f"data: {token}\n\n"
+
+    return StreamingResponse(event_gen(), media_type="text/event-stream")

@@ -181,3 +181,10 @@ class ChatService:
         if len(readable) == 2:
             return f"Please provide the {readable[0]} and {readable[1]}."
         return f"I need: {', '.join(readable[:-1])}, and {readable[-1]}."
+
+
+    async def stream_reply(self, conversation_id: str, message: str):
+    # All your existing logic remains (intent detection, params, API calls)
+
+        async for token in self.llm_service.generate_stream(message):
+            yield token
