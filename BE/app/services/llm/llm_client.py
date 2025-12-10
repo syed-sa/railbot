@@ -34,9 +34,8 @@ class LLMClient:
     
 
 
-    async def generate_stream(self, messages):
+    async def generate_stream(self, messages: list):
         """Stream tokens from Hugging Face API"""
-        print(f"DEBUG [llm_client]: generate_stream called with: {messages}")
         
         # Ensure messages is in correct format
         if isinstance(messages, str):
@@ -55,7 +54,6 @@ class LLMClient:
 
         headers = {"Authorization": f"Bearer {self.api_key}"}
         
-        print(f"DEBUG [llm_client]: Payload: {payload}")
 
         async with httpx.AsyncClient(timeout=30.0) as client:
             try:

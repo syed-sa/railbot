@@ -190,9 +190,8 @@ class LLMService:
     """
             }
         ]
-        llm_response = await self.llm.generate(prompt)
-        text = llm_response
-        return text
+        async for token in self.llm.generate_stream(prompt):
+            yield token
 
     async def generate_stream(self, message: str):
         print(f"DEBUG [llm_service]: Received message: '{message}'")

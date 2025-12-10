@@ -21,7 +21,7 @@ export default function ChatWindow() {
 
   try {
     const response = await fetch(
-      "http://localhost:8000/api/v1/chat/stream?timeout=30",
+      "http://localhost:8000/api/v1/chat/?timeout=30",
       {
         method: "POST",
         headers: {
@@ -29,7 +29,7 @@ export default function ChatWindow() {
           Accept: "text/event-stream",
         },
         body: JSON.stringify({
-          conversation_id: Date.now().toString(), // Use unique ID
+          conversation_id: "1", // Use unique ID
           message: currentInput,
         }),
       }

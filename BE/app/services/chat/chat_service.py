@@ -1,25 +1,24 @@
 import asyncio
-from typing import Dict, Any, List
+from typing import AsyncIterator, Dict, Any, List
 from fastapi.params import Depends
 from app.services.llm.llm_service import LLMService
 from app.services.redis.state_manager import StateManager
 from app.services.irctc.irctc_client import IRCTCClient, IRCTCClientError
 
-
 class ChatService:
-    HISTORY_LIMIT = 15
-
+    HISTORY_LIMIT = 15  
     def __init__(
         self,
-        state=Depends(StateManager),
+        state: StateManager = Depends(StateManager),
         irctc_client: IRCTCClient = Depends(IRCTCClient),
-        llm_service=Depends(LLMService),
+        llm_service: LLMService = Depends(LLMService),
     ):
-        self.state = state
-        self.irctc = irctc_client
-        self.llm_service = llm_service
+        self.state: StateManager = state
+        self.irctc: IRCTCClient = irctc_client
+        self.llm_service: LLMService = llm_service
 
-    async def handle_user_message(self, conversation_id: str, message: str) -> Dict[str, Any]:
+
+    async def handle_user_message(self, conversation_id: str, message: str) -> AsyncIterator[str]:
         self._store_message(conversation_id, "user", message)
 
         conv_state = self.state.get_state(conversation_id)
@@ -37,7 +36,8 @@ class ChatService:
         if category == "small_talk":
             reply = self._handle_small_talk(intent)
             self._store_message(conversation_id, "assistant", reply)
-            return {"reply": reply}
+            yield reply
+            return
 
         # =========================
         # CATEGORY: OUT OF SCOPE
@@ -45,7 +45,8 @@ class ChatService:
         if category == "out_of_scope":
             reply = " I can help you with IRCTC train services. Please ask me if you have any questions related to trains, bookings, or PNR status."
             self._store_message(conversation_id, "assistant", reply)
-            return {"reply": reply}
+            yield reply
+            return
 
         # =========================
         # CATEGORY: DOMAIN (IRCTC)
@@ -66,7 +67,8 @@ class ChatService:
             if missing:
                 reply = self._ask_for_missing_params(missing)
                 self._store_message(conversation_id, "assistant", reply)
-                return {"reply": reply}
+                yield reply
+                return
 
         # Continue collecting parameters
         elif conv_state["stage"] == "awaiting_params":
@@ -78,19 +80,16 @@ class ChatService:
                 self.state.set_state(conversation_id, conv_state)
                 reply = self._ask_for_missing_params(missing)
                 self._store_message(conversation_id, "assistant", reply)
-                return {"reply": reply}
+                yield reply
+                return
 
             conv_state["stage"] = "ready"
             self.state.set_state(conversation_id, conv_state)
 
         # Execute IRCTC API
         response_text = (await self._dispatch(conv_state["intent"], conv_state["params"]))
-        response_text = await self.llm_service.to_natural_language(conv_state["intent"], response_text)
-
-        self._store_message(conversation_id, "assistant", response_text)
-
-        self.state.clear(conversation_id)
-        return response_text
+        async for token in self.llm_service.to_natural_language(conv_state["intent"], response_text):
+            yield token
 
 
     # ============================================================
