@@ -1,10 +1,12 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.router import api_router
+from app.container import Container
 
 def create_app():
     app = FastAPI(title="Train-Info Chatbot", version="1.0.0")
-    
+    container = Container()
+
     # Add CORS middleware
     app.add_middleware(
         CORSMiddleware,
@@ -20,6 +22,8 @@ def create_app():
     )
     
     app.include_router(api_router, prefix="/api/v1")
+    app.container = container
+    container.wire(modules=["app.api.v1.chat"])
     return app
 
 app = create_app()

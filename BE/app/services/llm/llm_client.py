@@ -9,9 +9,11 @@ settings = get_settings()
 
 
 class LLMClient:
-    def __init__(self):
-        self.api_url = settings.HF_API_URL
-        self.api_key = settings.HF_API_KEY
+    def __init__(self, api_url: str, api_key: str, model_name: str):
+        self.api_url = api_url
+        self.api_key = api_key
+        self.model_name = model_name
+
 
     async def generate(self, messages: list):
         payload = {

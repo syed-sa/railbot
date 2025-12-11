@@ -4,8 +4,10 @@ import json
 from app.services.llm.llm_client import LLMClient
 
 class LLMService:
-    def __init__(self):
-        self.llm = LLMClient()
+    def __init__(self, llm_client: LLMClient):
+        self.llm = llm_client
+
+
 
     async def classify_intent(self, message: str) -> dict:
         """

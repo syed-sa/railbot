@@ -16,14 +16,14 @@ class IRCTCClient:
     Async wrapper for the IRCTC RapidAPI endpoints.
     No retries are performed here by design (per user instruction).
     """
-
-    def __init__(self, timeout: float = 20.0):
+    def __init__(self, api_key: str, host: str, timeout: float = 20.0):
         self.base_url = "https://irctc1.p.rapidapi.com"
         self.headers = {
-            "x-rapidapi-key": settings.IRCTC_API_KEY,
-            "x-rapidapi-host": settings.RAPIDAPI_HOST,
+            "x-rapidapi-key": api_key,
+            "x-rapidapi-host": host,
         }
         self.timeout = timeout
+
 
     async def _get(self, path: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         

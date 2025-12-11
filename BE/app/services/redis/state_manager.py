@@ -9,17 +9,17 @@ settings = get_settings()
 
 # Add connection pooling for better performance
 class StateManager:
-    """Manages conversation state and message history using Redis."""
-    def __init__(self):
+    def __init__(self, host: str, port: int, db: int):
         self.redis = Redis(
-            host=settings.REDIS_HOST,
-            port=settings.REDIS_PORT,
-            db=settings.REDIS_DB,
+            host=host,
+            port=port,
+            db=db,
             decode_responses=True,
-            max_connections=10  # Add connection pooling
+            max_connections=10  
         )
-        self.ttl = 3600  # 1 hour
+        self.ttl = 3600
         self.max_history = 20
+
 
     def health_check(self) -> bool:
         """Check if Redis is accessible"""

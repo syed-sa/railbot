@@ -6,16 +6,17 @@ from app.services.redis.state_manager import StateManager
 from app.services.irctc.irctc_client import IRCTCClient, IRCTCClientError
 
 class ChatService:
-    HISTORY_LIMIT = 15  
+    HISTORY_LIMIT = 15
+
     def __init__(
         self,
-        state: StateManager = Depends(StateManager),
-        irctc_client: IRCTCClient = Depends(IRCTCClient),
-        llm_service: LLMService = Depends(LLMService),
+        state: StateManager,
+        irctc_client: IRCTCClient,
+        llm_service: LLMService,
     ):
-        self.state: StateManager = state
-        self.irctc: IRCTCClient = irctc_client
-        self.llm_service: LLMService = llm_service
+        self.state = state
+        self.irctc = irctc_client
+        self.llm_service = llm_service
 
 
     async def handle_user_message(self, conversation_id: str, message: str) -> AsyncIterator[str]:
