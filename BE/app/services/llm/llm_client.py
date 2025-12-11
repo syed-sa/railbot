@@ -14,7 +14,8 @@ class LLMClient:
         self.api_key = api_key
         self.model_name = model_name
 
-
+        if not self.api_key:
+                    raise ValueError("HF_API_KEY is missing! Please set it in the environment.")
     async def generate(self, messages: list):
         payload = {
             "model": settings.HF_MODEL_NAME,  # Example: "meta-llama/Meta-Llama-3-8B-Instruct"
