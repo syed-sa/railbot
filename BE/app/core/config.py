@@ -15,11 +15,7 @@ class Settings(BaseSettings):
     REDIS_DB: int = 0
 
     # Postgres
-    POSTGRES_USER: str = ""
-    POSTGRES_PASSWORD: str = ""
-    POSTGRES_DB: str = ""
-    POSTGRES_HOST: str = "localhost"
-    POSTGRES_PORT: int = 5432
+    POSTGRES_URI: str = "postgresql+asyncpg://user:password@localhost:5432/dbname"
 
     # HuggingFace LLM
     HF_API_KEY: str = ""
