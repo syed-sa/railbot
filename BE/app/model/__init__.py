@@ -1,7 +1,7 @@
 # model/__init__.py
 
 # Import the Base object so that all models inherit from the same metadata
-from db.base import Base
+from ..db.base import Base
 
 # Import all individual model files. 
 # The act of importing these classes registers them with Base.metadata.

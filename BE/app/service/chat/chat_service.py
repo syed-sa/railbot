@@ -1,9 +1,9 @@
 import asyncio
 from typing import AsyncIterator, Dict, Any, List
 from fastapi.params import Depends
-from app.services.llm.llm_service import LLMService
-from app.services.redis.state_manager import StateManager
-from app.services.irctc.irctc_client import IRCTCClient, IRCTCClientError
+from app.service.llm.llm_service import LLMService
+from app.service.redis.state_manager import StateManager
+from app.service.irctc.irctc_client import IRCTCClient, IRCTCClientError
 
 class ChatService:
     HISTORY_LIMIT = 15
@@ -44,7 +44,7 @@ class ChatService:
         # CATEGORY: OUT OF SCOPE
         # =========================
         if category == "out_of_scope":
-            reply = " I can help you with IRCTC train services. Please ask me if you have any questions related to trains, bookings, or PNR status."
+            reply = " I can help you with IRCTC train service. Please ask me if you have any questions related to trains, bookings, or PNR status."
             self._store_message(conversation_id, "assistant", reply)
             yield reply
             return
@@ -101,7 +101,7 @@ class ChatService:
             "greeting": "👋 Hello! How can I assist you with IRCTC today?",
             "farewell": "👋 Goodbye! Have a safe journey!",
             "thanks": "😊 You're welcome!",
-            "how_are_you": "I'm doing great! How can I help you with IRCTC services?"
+            "how_are_you": "I'm doing great! How can I help you with IRCTC service?"
         }
         return responses.get(intent)
 

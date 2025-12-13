@@ -1,6 +1,7 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from app.core.config import settings
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+from app.core.config import get_settings
 
-engine = create_engine(settings.DATABASE_URL, connect_args={"check_same_thread": False})
-SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
+settings = get_settings()
+# Use async engine for the `postgresql+asyncpg` dialect; remove sqlite-specific args
+engine = create_async_engine(settings.POSTGRES_URI, echo=False)
+SessionLocal = async_sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)

@@ -1,17 +1,19 @@
-from fastapi import Depends
+from fastapi import APIRouter, Depends
 from dependency_injector.wiring import inject, Provide
-from app.api import router
 from app.container import Container
-from sqlalchemy.orm import Session
-from app.main import get_db
-from app.schemas.user_schema import UserCreate, UserResponse
-from app.services.user_service import UserService
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.db.dep import get_db
+from app.schema.user_schema import UserCreate, UserResponse
+from app.service.user.user_service import UserService
+
+router = APIRouter()
+
 
 @router.post("/signup", response_model=UserResponse)
 @inject
-def signup(
+async def signup(
     payload: UserCreate,
-    db: Session = Depends(get_db),
-    user_service: UserService = Depends(Provide[Container.user_service])
+    db: AsyncSession = Depends(get_db),
+    user_service: UserService = Depends(Provide[Container.user_service]),
 ):
-    return user_service.signup(db, payload)
+    return await user_service.signup(db, payload)

@@ -2,7 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.router import api_router
 from app.container import Container
-
+from rich.traceback import install
+install(show_locals=True)
 def create_app():
     app = FastAPI(title="Train-Info Chatbot", version="1.0.0")
 

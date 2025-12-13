@@ -1,7 +1,7 @@
 # app/intents/classifier.py
 from typing import Dict, Any
 import json
-from app.services.llm.llm_client import LLMClient
+from app.service.llm.llm_client import LLMClient
 
 class LLMService:
     def __init__(self, llm_client: LLMClient):

@@ -15,8 +15,7 @@ class Settings(BaseSettings):
     REDIS_DB: int = 0
 
     # Postgres
-    POSTGRES_URI: str = "postgresql+asyncpg://user:password@localhost:5432/dbname"
-
+    POSTGRES_URI: str = ""
     # HuggingFace LLM
     HF_API_KEY: str = ""
     HF_API_URL: str = "https://router.huggingface.co/v1/chat/completions"

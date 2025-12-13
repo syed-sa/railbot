@@ -1,13 +1,13 @@
 # app/container.py
 from dependency_injector import containers, providers
 
-from app.services.chat.chat_service import ChatService
-from app.services.irctc.irctc_client import IRCTCClient
-from app.services.llm.llm_client import LLMClient
-from app.services.llm.llm_service import LLMService
-from app.services.redis.state_manager import StateManager
-from app.repositories.user_repository import UserRepository
-from app.services.user_service import UserService
+from app.service.chat.chat_service import ChatService
+from app.service.irctc.irctc_client import IRCTCClient
+from app.service.llm.llm_client import LLMClient
+from app.service.llm.llm_service import LLMService
+from app.service.redis.state_manager import StateManager
+from app.repository.user_repository import UserRepository
+from app.service.user.user_service import UserService
 
 
 from app.core.config import get_settings
@@ -18,11 +18,11 @@ settings = get_settings()
 class Container(containers.DeclarativeContainer):
 
     wiring_config = containers.WiringConfiguration(
-    modules=[
-        "app.api.v1.chat",
-        "app.api.v1.user",   
-    ]
-)
+        modules=[
+            "app.api.v1.chat",
+            "app.api.v1.user",
+        ]
+    )
 
     # Redis
     state_manager = providers.Singleton(
@@ -58,7 +58,6 @@ class Container(containers.DeclarativeContainer):
         irctc_client=irctc_client,
         llm_service=llm_service,
     )
-
 
     # User Repository
     user_repository = providers.Singleton(UserRepository)
