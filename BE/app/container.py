@@ -1,76 +1,46 @@
 # app/container.py
 from dependency_injector import containers, providers
-
-from app.service.chat.chat_service import ChatService
-from app.service.irctc.irctc_client import IRCTCClient
-from app.service.llm.llm_client import LLMClient
-from app.service.llm.llm_service import LLMService
-from app.service.redis.state_manager import StateManager
-from app.repository.user_repository import UserRepository
-from app.service.user.user_service import UserService
-from app.service.auth.auth_service import AuthService
 from app.core.security.jwt import JWTManager
-
+from app.core.security.password import passwordManager
+from app.repository.auth_repository import AuthRepository
+from app.repository.user_repository import UserRepository
 from app.core.config import get_settings
-
-settings = get_settings()
-
-
+from app.service.auth.auth_service import AuthService
+from app.service.user.user_service import UserService
+from app.service.chat.chat_service import ChatService
 class Container(containers.DeclarativeContainer):
 
-    wiring_config = containers.WiringConfiguration(
-        modules=[
-            "app.api.v1.chat",
-            "app.api.v1.user",
-        ]
-    )
-
-    # Redis
-    state_manager = providers.Singleton(
-        StateManager,
-        host=settings.REDIS_HOST,
-        port=settings.REDIS_PORT,
-        db=settings.REDIS_DB,
-    )
-
-    # IRCTC
-    irctc_client = providers.Singleton(
-        IRCTCClient,
-        api_key=settings.IRCTC_API_KEY,
-        host=settings.RAPIDAPI_HOST,
-        timeout=20.0,
-    )
-
-    # LLM Client
-    llm_client = providers.Singleton(
-        LLMClient,
-        api_url=settings.HF_API_URL,
-        api_key=settings.HF_API_KEY,
-        model_name=settings.HF_MODEL_NAME,
-    )
-
-    # LLM Service
-    llm_service = providers.Singleton(LLMService, llm_client=llm_client)
-
-    # Chat Service
-    chat_service = providers.Factory(
-        ChatService,
-        state=state_manager,
-        irctc_client=irctc_client,
-        llm_service=llm_service,
-    )
-
-    # User Repository
+    settings = get_settings()
+    # Repositories
     user_repository = providers.Singleton(UserRepository)
+    auth_repository = providers.Singleton(AuthRepository)
 
-    # User Service
-    user_service = providers.Factory(UserService, repo=user_repository, jwt_manager=JWTManager)
-
+    # Security
     jwt_manager = providers.Singleton(
-        "app.core.security.jwt.JWTManager",
+        JWTManager,
         secret_key=settings.SECRET_KEY,
         algorithm=settings.ALGORITHM,
+        access_exp_minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES,
+        refresh_exp_days=settings.REFRESH_TOKEN_EXPIRE_DAYS,
     )
 
-    # Auth Service
-    auth_service = providers.Factory(AuthService, refresh_repo=user_repository, jwt_manager=jwt_manager)
+    password_manager = providers.Singleton(passwordManager)
+
+    # Services
+    user_service = providers.Factory(
+        UserService,
+        repo=user_repository,
+        auth_repository=auth_repository,
+        jwt_manager=jwt_manager,
+        password_manager=password_manager,
+    )
+
+    auth_service = providers.Factory(
+        AuthService,
+        auth_repository=auth_repository,
+        jwt_manager=jwt_manager,
+    )
+
+    chat_service = providers.Factory(
+        ChatService,
+    )

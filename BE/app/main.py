@@ -10,7 +10,10 @@ def create_app():
     container = Container()
     app.container = container
 
-    container.wire(modules=["app.api.v1.chat"])
+    container.wire(modules=[
+    "app.api.v1.user",
+    "app.api.v1.chat",
+    ])
 
     app.add_middleware(
         CORSMiddleware,

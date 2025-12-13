@@ -1,13 +1,13 @@
 from uuid import uuid4
 from fastapi import HTTPException
-
+from app.repository.auth_repository import AuthRepository
 from app.core.security.jwt import JWTManager
 
 
 class AuthService:
     def __init__(
         self,
-        refresh_repo: RefreshTokenRepository,
+        refresh_repo: AuthRepository,
         jwt_manager: JWTManager,
     ):
         self.refresh_repo = refresh_repo

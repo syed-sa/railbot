@@ -6,7 +6,7 @@ import { Input } from '../common/Input';
 
 export const AuthForm = () => {
   const [authMode, setAuthMode] = useState('login');
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -15,8 +15,8 @@ export const AuthForm = () => {
 
   const handleSubmit = async () => {
     // Prevent submitting if fields are empty
-    if (!username || !password) {
-      setError('Please enter both username and password.');
+    if (!email || !password) {
+      setError('Please enter both email and password.');
       return;
     }
 
@@ -25,9 +25,9 @@ export const AuthForm = () => {
 
     try {
       if (authMode === 'login') {
-        await login(username, password);
+        await login(email, password);
       } else {
-        await signup(username, password);
+        await signup(email, password);
       }
     } catch (err) {
       // Assuming the error object has a 'message' property
@@ -39,7 +39,7 @@ export const AuthForm = () => {
 
   const handleKeyPress = (e) => {
     // Check for 'Enter' key press and ensure fields are not empty before submitting
-    if (e.key === 'Enter' && username && password) {
+    if (e.key === 'Enter' && email && password) {
       handleSubmit();
     }
   };
@@ -100,12 +100,12 @@ export const AuthForm = () => {
         <div className="space-y-6">
           
           <Input
-            label="Username"
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            label="Email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Enter your username"
+            placeholder="Enter your email"
           />
           
           <Input
@@ -125,7 +125,7 @@ export const AuthForm = () => {
 
           <Button 
             onClick={handleSubmit} 
-            disabled={loading || !username || !password} // Disable if loading or fields are empty
+            disabled={loading || !email || !password} // Disable if loading or fields are empty
             className="w-full h-12 bg-indigo-600 text-white hover:bg-indigo-700"
           >
             {loading ? (

@@ -21,17 +21,17 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const login = async (username, password) => {
-    const data = await authAPI.login(username, password);
+  const login = async (email, password) => {
+    const data = await authAPI.login(email, password);
     setIsAuthenticated(true);
-    setUser({ username });
+    setUser({ email });
     return data;
   };
 
-  const signup = async (username, password) => {
-    const data = await authAPI.signup(username, password);
+  const signup = async (email, password) => {
+    const data = await authAPI.signup(email, password);
     setIsAuthenticated(true);
-    setUser({ username });
+    setUser({ email });
     return data;
   };
 

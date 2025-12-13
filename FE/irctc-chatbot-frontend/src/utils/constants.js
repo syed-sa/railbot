@@ -3,9 +3,9 @@ export const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localh
 
 export const ENDPOINTS = {
   AUTH: {
-    LOGIN: '/auth/login',
-    SIGNUP: '/auth/signup',
-    REFRESH: '/auth/refresh-token',
+    LOGIN: '/api/v1/user/login',
+    SIGNUP: '/api/v1/user/signup',
+    REFRESH: '/api/v1/user/refresh-token',
   },
   CHAT: '/chat/',
 };

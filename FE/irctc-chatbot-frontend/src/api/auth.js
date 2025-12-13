@@ -3,12 +3,12 @@ import { apiClient } from '../utils/api';
 import { storage } from '../utils/storage';
 
 export const authAPI = {
-  async login(username, password) {
-    const data = await apiClient.post(ENDPOINTS.AUTH.LOGIN, { username, password });
+  async login(email, password) {
+    const data = await apiClient.post(ENDPOINTS.AUTH.LOGIN, { email, password });
     
     storage.setAccessToken(data.access_token);
     storage.setRefreshToken(data.refresh_token);
-    storage.setUser({ username });
+    storage.setUser({ email });
     
     return data;
   },

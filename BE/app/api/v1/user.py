@@ -6,7 +6,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.dep import get_db
 from app.schema.user_schema import UserCreate, UserResponse
 from app.service.user.user_service import UserService
+from app.core.security.password import passwordManager
 
+from dependency_injector.wiring import inject, Provide
+from fastapi import Depends
 router = APIRouter()
 
 
@@ -21,6 +24,7 @@ async def signup(
     return await user_service.signup(db, payload)
 
 
+
 @router.post("/login")
 @inject
 async def login(
@@ -29,7 +33,6 @@ async def login(
     user_service: UserService = Depends(Provide[Container.user_service]),
 ):
     return await user_service.login(db, payload)
-
 
 @router.post("/refresh-token")
 async def refresh_token(
