@@ -17,3 +17,22 @@ async def signup(
     user_service: UserService = Depends(Provide[Container.user_service]),
 ):
     return await user_service.signup(db, payload)
+
+
+@router.post("/login")
+@inject
+async def login(
+    payload: UserCreate,
+    db: AsyncSession = Depends(get_db),
+    user_service: UserService = Depends(Provide[Container.user_service]),
+):
+    return await user_service.login(db, payload)
+
+
+@router.post("/refresh-token")
+async def refresh_token(
+    token: str,
+    db: AsyncSession = Depends(get_db),
+    user_service: UserService = Depends(Provide[Container.user_service]),
+):
+    return await user_service.refresh_token(db, token)
