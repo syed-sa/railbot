@@ -8,7 +8,8 @@ from app.service.llm.llm_service import LLMService
 from app.service.redis.state_manager import StateManager
 from app.repository.user_repository import UserRepository
 from app.service.user.user_service import UserService
-
+from app.service.auth.auth_service import AuthService
+from app.core.security.jwt import JWTManager
 
 from app.core.config import get_settings
 
@@ -63,4 +64,13 @@ class Container(containers.DeclarativeContainer):
     user_repository = providers.Singleton(UserRepository)
 
     # User Service
-    user_service = providers.Factory(UserService, repo=user_repository)
+    user_service = providers.Factory(UserService, repo=user_repository, jwt_manager=JWTManager)
+
+    jwt_manager = providers.Singleton(
+        "app.core.security.jwt.JWTManager",
+        secret_key=settings.SECRET_KEY,
+        algorithm=settings.ALGORITHM,
+    )
+
+    # Auth Service
+    auth_service = providers.Factory(AuthService, refresh_repo=user_repository, jwt_manager=jwt_manager)

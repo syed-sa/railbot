@@ -21,10 +21,10 @@ class Settings(BaseSettings):
     HF_API_URL: str = "https://router.huggingface.co/v1/chat/completions"
     HF_MODEL_NAME: str = "meta-llama/Llama-3.1-8B-Instruct"
 
-    SECRET_KEY = ""
-    ALGORITHM = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES = 60
-    REFRESH_TOKEN_EXPIRE_DAYS = 7
+    SECRET_KEY:str =""
+    ALGORITHM:str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES:int = 60
+    REFRESH_TOKEN_EXPIRE_DAYS:int = 7
     class Config:
         env_file = ".env"
         extra = "ignore"
