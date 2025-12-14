@@ -4,8 +4,6 @@ import json
 import httpx
 from app.core.config import get_settings
 
-settings = get_settings()
-
 
 
 class LLMClient:
@@ -18,7 +16,7 @@ class LLMClient:
                     raise ValueError("HF_API_KEY is missing! Please set it in the environment.")
     async def generate(self, messages: list):
         payload = {
-            "model": settings.HF_MODEL_NAME,  # Example: "meta-llama/Meta-Llama-3-8B-Instruct"
+            "model": self.model_name,  # Example: "meta-llama/Meta-Llama-3-8B-Instruct"
             "messages": messages,
             "max_tokens": 256,
             "temperature": 0.3
@@ -48,7 +46,7 @@ class LLMClient:
         
         # OpenAI-compatible payload
         payload = {
-            "model": settings.HF_MODEL_NAME,
+            "model": self.model_name,
             "messages": messages,
             "stream": True,
             "max_tokens": 256,

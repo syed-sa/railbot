@@ -34,7 +34,7 @@ export const ChatInterface = () => {
       </div>
 
       {/* 4. Input component (sends the message via the hook) */}
-      <ChatInput sendMessage={sendMessage} />
+      <ChatInput onSendMessage={sendMessage} />
       
     </div>
   );

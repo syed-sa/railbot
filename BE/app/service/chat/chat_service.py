@@ -20,38 +20,30 @@ class ChatService:
 
 
     async def handle_user_message(self, conversation_id: str, message: str) -> AsyncIterator[str]:
-        self._store_message(conversation_id, "user", message)
-
+        
         conv_state = self.state.get_state(conversation_id)
 
         # =========================
         # STEP 1 → Detect category
         # =========================
-        classification = await self.llm_service.classify_intent(message)
+        messages = self.state.get_messages(conversation_id)
+        classification = await self.llm_service.classify_intent(message,messages)
         category = classification["category"]
         intent = classification["intent"]
+        self._store_message(conversation_id, "user", message)
 
-        # =========================
-        # CATEGORY: SMALL TALK
-        # =========================
+
         if category == "small_talk":
             reply = self._handle_small_talk(intent)
             self._store_message(conversation_id, "assistant", reply)
             yield reply
             return
 
-        # =========================
-        # CATEGORY: OUT OF SCOPE
-        # =========================
         if category == "out_of_scope":
             reply = " I can help you with IRCTC train service. Please ask me if you have any questions related to trains, bookings, or PNR status."
             self._store_message(conversation_id, "assistant", reply)
             yield reply
             return
-
-        # =========================
-        # CATEGORY: DOMAIN (IRCTC)
-        # =========================
 
         # Fresh conversation
         if not conv_state:

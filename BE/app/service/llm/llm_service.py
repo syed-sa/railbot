@@ -9,69 +9,68 @@ class LLMService:
 
 
 
-    async def classify_intent(self, message: str) -> dict:
-        """
-        Returns:
-        {
-            "category": "domain" | "small_talk" | "out_of_scope",
-            "intent": "pnr_status" | "greeting" | null
-        }
-        """
+    async def classify_intent(self, message: str, message_history: list) -> dict:
         prompt = [
             {
                 "role": "system",
-                "content": """
-            You are an intent classifier for an IRCTC chatbot.
-
-            Return a JSON with:
-            {
-            "category": "domain" | "small_talk" | "out_of_scope",
-            "intent": "<intent_name or null>"
-            }
-
-            ====================
-            SMALL TALK INTENTS:
-            - greeting (hi, hello, good morning, hey)
-            - farewell (bye, good night)
-            - thanks (thanks, thank you)
-            - how_are_you (how are you?)
-
-            ====================
-            DOMAIN INTENTS:
-            - train_between_stations
-            - live_status
-            - train_schedule
-            - seat_availability
-            - pnr_status
-            - search_train
-            - search_station
-            - get_fare
-
-            ====================
-            OUT OF SCOPE:
-            Anything unrelated to trains or IRCTC.
-
-            STRICT RULES:
-            - Return ONLY JSON.
-            - No markdown. No explanation.
-            """
+                "content": (
+                    "You are an intent classifier for an IRCTC chatbot.\n"
+                    "You are given the user's current message and previous conversation history.\n\n"
+                    "Classify the intent and return ONLY valid JSON in this format:\n"
+                    "{\n"
+                    '  "category": "domain" | "small_talk" | "out_of_scope",\n'
+                    '  "intent": "<intent_name or null>"\n'
+                    "}\n\n"
+                    "====================\n"
+                    "SMALL TALK INTENTS:\n"
+                    "- greeting\n"
+                    "- farewell\n"
+                    "- thanks\n"
+                    "- how_are_you\n\n"
+                    "====================\n"
+                    "DOMAIN INTENTS:\n"
+                    "- train_between_stations\n"
+                    "- live_status\n"
+                    "- train_schedule\n"
+                    "- seat_availability\n"
+                    "- pnr_status\n"
+                    "- search_train\n"
+                    "- search_station\n"
+                    "- get_fare\n\n"
+                    "====================\n"
+                    "OUT OF SCOPE:\n"
+                    "Anything unrelated to trains or IRCTC.\n\n"
+                    "STRICT RULES:\n"
+                    "- Return ONLY JSON\n"
+                    "- No markdown\n"
+                    "- No explanation\n"
+                    "- If unsure, category = out_of_scope and intent = null"
+                )
             },
-            {"role": "user", "content": message}
+            {
+                "role": "user",
+                "content": f"""
+    CURRENT MESSAGE:
+    {message}
+
+    CONVERSATION HISTORY:
+    {json.dumps(message_history, ensure_ascii=False)}
+    """
+            }
         ]
 
         response = await self.llm.generate(prompt)
 
-        cleaned = response.strip()
         try:
+            cleaned = response.strip()
             if cleaned.startswith("```"):
                 cleaned = cleaned.split("```")[1]
                 if cleaned.startswith("json"):
                     cleaned = cleaned[4:]
-            cleaned = cleaned.strip()
-
-            return json.loads(cleaned)
+            return json.loads(cleaned.strip())
         except Exception:
             return {"category": "out_of_scope", "intent": None}
+
 
 
     async def extract_params(self, intent: str, message: str) -> Dict[str, Any]:

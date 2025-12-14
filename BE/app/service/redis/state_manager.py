@@ -4,22 +4,16 @@ from typing import Optional
 from redis import Redis
 from app.core.config import get_settings
 
-settings = get_settings()
-
-
-# Add connection pooling for better performance
 class StateManager:
-    def __init__(self, host: str, port: int, db: int):
-        self.redis = Redis(
-            host=host,
-            port=port,
-            db=db,
-            decode_responses=True,
-            max_connections=10  
-        )
-        self.ttl = 3600
-        self.max_history = 20
-
+    def __init__(
+        self,
+        redis: Redis,
+        ttl: int = 3600,
+        max_history: int = 20,
+    ):
+        self.redis = redis
+        self.ttl = ttl
+        self.max_history = max_history
 
     def health_check(self) -> bool:
         """Check if Redis is accessible"""
