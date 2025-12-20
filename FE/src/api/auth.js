@@ -13,12 +13,12 @@ export const authAPI = {
     return data;
   },
 
-  async signup(username, password) {
-    const data = await apiClient.post(ENDPOINTS.AUTH.SIGNUP, { username, password });
+  async signup(email, password) {
+    const data = await apiClient.post(ENDPOINTS.AUTH.SIGNUP, { email, password });
     
     storage.setAccessToken(data.access_token);
     storage.setRefreshToken(data.refresh_token);
-    storage.setUser({ username });
+    storage.setUser({ email });
     
     return data;
   },
