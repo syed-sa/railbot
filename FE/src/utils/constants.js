@@ -7,7 +7,8 @@ export const ENDPOINTS = {
     SIGNUP: '/api/v1/user/signup',
     REFRESH: '/api/v1/user/refresh-token',
   },
-  CHAT: '/api/v1/chat/',
+  // CHAT: '/api/v1/chat/',
+  CHAT: '/api/v1/chat/test',
 };
 
 export const STORAGE_KEYS = {

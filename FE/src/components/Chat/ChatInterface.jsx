@@ -1,41 +1,54 @@
-import React, { useEffect, useState } from 'react';
-import { ChatHeader } from './ChatHeader';
-import { ChatMessages } from './ChatMessages';
-import { ChatInput } from './ChatInput';
-import { useChat } from '../../hooks/useChat';
-import { WELCOME_MESSAGE } from '../../utils/constants';
+import React, { useState } from "react";
+import { ChatHeader } from "./ChatHeader";
+import { ChatMessages } from "./ChatMessages";
+import { ChatInput } from "./ChatInput";
+import { useChat } from "../../hooks/useChat";
+
+const QUICK_OPTIONS = [
+  "PNR Status",
+  "Live Train Status",
+  "Seat Availability",
+  "Fare information",
+  "Trains between stations",
+];
 
 export const ChatInterface = () => {
-  // Generates a unique, stable conversation ID for the duration of this component's life
   const [conversationId] = useState(
     () => `conv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
   );
-  
-  // Use the chat hook to manage state and actions
-  const { messages, isTyping, sendMessage, setMessages } = useChat(conversationId);
 
-  // Initialize the conversation with a welcome message only once on mount
-  useEffect(() => {
-    // Note: The useChat hook might already initialize messages. 
-    // This is safe if the hook doesn't set an initial state.
-    setMessages([{ role: 'assistant', content: WELCOME_MESSAGE }]);
-  }, [setMessages]);
+  const { messages, isTyping, sendMessage } = useChat(conversationId);
+
+  const handleQuickOptionClick = (option) => {
+    sendMessage(option);
+  };
 
   return (
-    // 1. Main container for the entire chat interface
-    <div className="chat-interface-container flex flex-col h-full bg-white shadow-xl rounded-lg">
-      
-      {/* 2. Header component */}
+    <div className="chat-interface-container flex flex-col h-screen bg-white shadow-xl rounded-lg">
       <ChatHeader />
-      
-      {/* 3. Messages display area (takes up most of the space) */}
+
+      {/* Messages */}
       <div className="messages-area flex-grow overflow-hidden">
         <ChatMessages messages={messages} isTyping={isTyping} />
       </div>
 
-      {/* 4. Input component (sends the message via the hook) */}
+      {/* Quick buttons */}
+      {messages.length === 0 && (
+        <div className="quick-options flex flex-wrap gap-2 p-3 border-t bg-gray-50">
+          {QUICK_OPTIONS.map((option) => (
+            <button
+              key={option}
+              onClick={() => handleQuickOptionClick(option)}
+              className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Input */}
       <ChatInput onSendMessage={sendMessage} />
-      
     </div>
   );
 };
