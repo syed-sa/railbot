@@ -8,8 +8,8 @@ const QUICK_OPTIONS = [
   "PNR Status",
   "Live Train Status",
   "Seat Availability",
-  "Fare information",
-  "Trains between stations",
+  "Fare Information",
+  "Trains Between Stations",
 ];
 
 export const ChatInterface = () => {
@@ -18,8 +18,10 @@ export const ChatInterface = () => {
   );
 
   const { messages, isTyping, sendMessage } = useChat(conversationId);
+  const [selectedOption, setSelectedOption] = useState(null);
 
   const handleQuickOptionClick = (option) => {
+    setSelectedOption(option);
     sendMessage(option);
   };
 
@@ -27,25 +29,46 @@ export const ChatInterface = () => {
     <div className="chat-interface-container flex flex-col h-screen bg-white shadow-xl rounded-lg">
       <ChatHeader />
 
-      {/* Messages */}
-      <div className="messages-area flex-grow overflow-hidden">
+      {/* Messages Area */}
+      <div className="flex-grow overflow-y-auto px-4 py-3 space-y-3">
+        
+        {/* Bot Greeting */}
+        {messages.length === 0 && (
+          <div className="max-w-[75%] bg-gray-100 text-gray-800 px-4 py-2.5 rounded-2xl">
+            How can I help you today?
+          </div>
+        )}
+
+        {/* Quick Options (Image-style placement) */}
+        {messages.length === 0 && (
+          <div className="flex flex-wrap gap-3 max-w-[85%]">
+            {QUICK_OPTIONS.map((option) => {
+              const isSelected = selectedOption === option;
+
+              return (
+                <button
+                  key={option}
+                  onClick={() => handleQuickOptionClick(option)}
+                  className={`
+                    px-5 py-2.5 rounded-full text-sm font-medium
+                    transition-all duration-200
+                    ${
+                      isSelected
+                        ? "bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-md"
+                        : "border border-purple-400 text-purple-600 hover:bg-purple-50"
+                    }
+                  `}
+                >
+                  {option}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Actual Chat Messages */}
         <ChatMessages messages={messages} isTyping={isTyping} />
       </div>
-
-      {/* Quick buttons */}
-      {messages.length === 0 && (
-        <div className="quick-options flex flex-wrap gap-2 p-3 border-t bg-gray-50">
-          {QUICK_OPTIONS.map((option) => (
-            <button
-              key={option}
-              onClick={() => handleQuickOptionClick(option)}
-              className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
-            >
-              {option}
-            </button>
-          ))}
-        </div>
-      )}
 
       {/* Input */}
       <ChatInput onSendMessage={sendMessage} />
