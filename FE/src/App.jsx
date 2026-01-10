@@ -17,7 +17,8 @@ const AppContent = () => {
 
   // Ternary operator needs content for both true and false outcomes.
   // It renders ChatInterface if isAuthenticated is true, otherwise it renders AuthForm.
-  return isAuthenticated ? <ChatInterface /> : <AuthForm />;
+  // return isAuthenticated ? <ChatInterface /> : <AuthForm />;
+  return <ChatInterface />;
 };
 
 // Main App component that wraps the content in the AuthProvider
